@@ -1,0 +1,52 @@
+version: "3.7"
+services:
+    postgres:
+        image: "postgres"
+        environment:
+            - POSTGRES_PASSWORD=postgres_passwrod
+    redis:
+        image: "redis"
+    api:
+        restart: always
+        depends_on:
+            - postgres
+            - redis
+        build:
+            dockerfile: Dockerfile.dev
+            context: ./server
+        volumes:
+            # ingore
+            - /app/node_modules
+            # setting volume
+            - ./server:/app
+        environment:
+            - REDIS_HOST=redis
+            - REDIS_PORT=6379
+            - PGUSER=postgres
+            - PGHOST=postgres
+            - PGDATABASE=postgres
+            - PGPASSWORD=postgres_passwrod
+            - PGPORT=5432
+    client:
+        build:
+            dockerfile: Dockerfile.dev
+            context: ./client
+        volumes:
+        # ingore
+            - /app/node_modules
+        # setting volume
+            - ./client:/app
+    worker:
+        build:
+            dockerfile: Dockerfile.dev
+            context: ./worker
+        volumes:
+            - /app/node_modules
+            - ./worker:/app
+    nginx:
+        restart: always
+        build:
+            dockerfile: Dockerfile.dev
+            context: ./nginx
+        ports:
+            - "3000:80"
